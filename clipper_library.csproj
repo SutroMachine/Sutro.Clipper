@@ -1,14 +1,43 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <PackageId>Sutro.Clipper</PackageId>
+    <Version>1.0.0</Version>
+    <PackageDescription>Polyline/polygon clipping library; intersection, union, difference, exclusive-or,
+and polyline/polygon offsetting.</PackageDescription>
+    <RepositoryUrl>https://github.com/SutroMachine/Sutro.Clipper</RepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>
+      $(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb
+    </AllowedOutputExtensionsInPackageBuildOutputFolder>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>Angus Johnson</Authors>
     <Company>Angus Johnson</Company>
     <Copyright>Copyright © Angus Johnson 2010-14</Copyright>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <Description>Polyline/polygon clipping library; intersection, union, difference, exclusive-or,
+and polyline/polygon offsetting.</Description>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Sutro.geometry3Sharp" Version="1.0.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="LICENSE.txt">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
