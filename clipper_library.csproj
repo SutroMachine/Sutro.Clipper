@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <PackageId>Sutro.Clipper</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <PackageDescription>Polyline/polygon clipping library; intersection, union, difference, exclusive-or,
 and polyline/polygon offsetting.</PackageDescription>
     <RepositoryUrl>https://github.com/SutroMachine/Sutro.Clipper</RepositoryUrl>
