@@ -1546,7 +1546,9 @@ namespace ClipperLib
             ProcessEdgesAtTopOfScanbeam(topY);
             botY = topY;
             InsertLocalMinimaIntoAEL(botY);
-          } 
+          }
+
+          ProcessHorizontals();
 
           //fix orientations ...
           foreach (OutRec outRec in m_PolyOuts)
