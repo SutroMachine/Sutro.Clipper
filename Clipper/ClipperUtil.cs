@@ -76,7 +76,7 @@ namespace gs
             return GetIntScale(poly.Outer.Vertices);
         }
 
-        public static double GetIntScale(List<GeneralPolygon2d> poly)
+        public static double GetIntScale(IReadOnlyCollection<GeneralPolygon2d> poly)
         {
             double max = 0;
             foreach (var v in poly)
@@ -98,7 +98,7 @@ namespace gs
 
         public static CPolygonList ConvertToClipper(GeneralPolygon2d polys, double nIntScale)
         {
-            List<CPolygon> clipper_polys = new List<CPolygon>();
+            CPolygonList clipper_polys = new CPolygonList();
             clipper_polys.Add(ConvertToClipper(polys.Outer, nIntScale));
             foreach (Polygon2d hole in polys.Holes)
                 clipper_polys.Add(ConvertToClipper(hole, nIntScale));
@@ -147,7 +147,7 @@ namespace gs
             return poly;
         }
 
-        public static List<GeneralPolygon2d> ConvertFromClipper(List<List<IntPoint>> clipper_polys, double nIntScale)
+        public static List<GeneralPolygon2d> ConvertFromClipper(CPolygonList clipper_polys, double nIntScale)
         {
             List<GeneralPolygon2d> result = new List<GeneralPolygon2d>();
             try
@@ -224,7 +224,7 @@ namespace gs
         {
             double nIntScale = GetIntScale(poly.Vertices);
 
-            List<IntPoint> clipper_poly = ClipperUtil.ConvertToClipper(poly, nIntScale);
+            CPolyPath clipper_poly = ConvertToClipper(poly, nIntScale);
             CPolygonList clipper_polys = new CPolygonList() { clipper_poly };
 
             CPolygonList dilate_solution = new CPolygonList();
@@ -249,7 +249,7 @@ namespace gs
             if (dilate_solution.Count == 0)
                 return new List<GeneralPolygon2d>();
 
-            List<GeneralPolygon2d> polys = ClipperUtil.ConvertFromClipper(dilate_solution, nIntScale);
+            List<GeneralPolygon2d> polys = ConvertFromClipper(dilate_solution, nIntScale);
             return polys;
         }
 
@@ -281,14 +281,14 @@ namespace gs
                 return new List<GeneralPolygon2d>();
             }
 
-            List<GeneralPolygon2d> polys = ClipperUtil.ConvertFromClipper(dilate_solution, nIntScale);
+            List<GeneralPolygon2d> polys = ConvertFromClipper(dilate_solution, nIntScale);
             return polys;
         }
 
         /// <summary>
         /// Compute offset polygon from all input polys (ie separate islands may merge)
         /// </summary>
-        public static List<GeneralPolygon2d> ComputeOffsetPolygon(List<GeneralPolygon2d> polys,
+        public static List<GeneralPolygon2d> ComputeOffsetPolygon(IReadOnlyCollection<GeneralPolygon2d> polys,
             double fOffset, bool bMiter = false, double minArea = -1, double nPer360 = 16)
         {
             double nIntScale = GetIntScale(polys);
@@ -323,7 +323,7 @@ namespace gs
             }
         }
 
-        public static List<GeneralPolygon2d> MiterOffset(List<GeneralPolygon2d> polys, double fOffset, double minArea = -1)
+        public static List<GeneralPolygon2d> MiterOffset(IReadOnlyCollection<GeneralPolygon2d> polys, double fOffset, double minArea = -1)
         {
             return ComputeOffsetPolygon(polys, fOffset, true, minArea);
         }
@@ -333,7 +333,7 @@ namespace gs
             return ComputeOffsetPolygon(new List<GeneralPolygon2d>() { poly }, fOffset, true, minArea);
         }
 
-        public static List<GeneralPolygon2d> RoundOffset(List<GeneralPolygon2d> polys, double fOffset, double minArea = -1, double nPer360 = 16)
+        public static List<GeneralPolygon2d> RoundOffset(IReadOnlyCollection<GeneralPolygon2d> polys, double fOffset, double minArea = -1, double nPer360 = 16)
         {
             return ComputeOffsetPolygon(polys, fOffset, false, minArea, nPer360);
         }
@@ -347,7 +347,7 @@ namespace gs
         /// Utility function that does a separate miter offset for each poly. The results may overlap.
         /// Not safe to use unless you are passing polys into another function.
         /// </summary>
-		public static List<GeneralPolygon2d> SeparateMiterOffsets(List<GeneralPolygon2d> polys, double fOffset, double minArea = -1)
+		public static List<GeneralPolygon2d> SeparateMiterOffsets(IReadOnlyCollection<GeneralPolygon2d> polys, double fOffset, double minArea = -1)
         {
             List<GeneralPolygon2d> offsets = new List<GeneralPolygon2d>();
             foreach (var p in polys)
@@ -366,23 +366,23 @@ namespace gs
                                   new List<GeneralPolygon2d>() { poly2 }, opType, minArea);
         }
 
-        public static List<GeneralPolygon2d> PolygonBoolean(GeneralPolygon2d poly1, List<GeneralPolygon2d> poly2, BooleanOp opType, double minArea = -1)
+        public static List<GeneralPolygon2d> PolygonBoolean(GeneralPolygon2d poly1, IReadOnlyCollection<GeneralPolygon2d> poly2, BooleanOp opType, double minArea = -1)
         {
             return PolygonBoolean(new List<GeneralPolygon2d>() { poly1 }, poly2, opType, minArea);
         }
 
-        public static List<GeneralPolygon2d> PolygonBoolean(List<GeneralPolygon2d> poly1, GeneralPolygon2d poly2, BooleanOp opType, double minArea = -1)
+        public static List<GeneralPolygon2d> PolygonBoolean(IReadOnlyCollection<GeneralPolygon2d> poly1, GeneralPolygon2d poly2, BooleanOp opType, double minArea = -1)
         {
             return PolygonBoolean(poly1, new List<GeneralPolygon2d>() { poly2 }, opType, minArea);
         }
 
-        public static List<GeneralPolygon2d> MergePolygons(List<GeneralPolygon2d> polys, double minArea = -1)
+        public static List<GeneralPolygon2d> MergePolygons(IReadOnlyCollection<GeneralPolygon2d> polys, double minArea = -1)
         {
             return PolygonUnion(polys, minArea);
         }
 
         public static List<GeneralPolygon2d> PolygonBoolean(
-            List<GeneralPolygon2d> poly1, List<GeneralPolygon2d> poly2,
+            IReadOnlyCollection<GeneralPolygon2d> poly1, IReadOnlyCollection<GeneralPolygon2d> poly2,
             BooleanOp opType, double minArea = -1)
         {
             // handle cases where one list is empty
@@ -449,7 +449,7 @@ namespace gs
         }
 
         public static List<GeneralPolygon2d> PolygonUnion(
-            List<GeneralPolygon2d> polys, double minArea = -1)
+            IReadOnlyCollection<GeneralPolygon2d> polys, double minArea = -1)
         {
             // handle cases where one list is empty
             if (polys.Count == 0)
@@ -492,12 +492,12 @@ namespace gs
             return PolygonBoolean(poly1, poly2, BooleanOp.Union, minArea);
         }
 
-        public static List<GeneralPolygon2d> Union(List<GeneralPolygon2d> poly1, GeneralPolygon2d poly2, double minArea = -1)
+        public static List<GeneralPolygon2d> Union(IReadOnlyCollection<GeneralPolygon2d> poly1, GeneralPolygon2d poly2, double minArea = -1)
         {
             return PolygonBoolean(poly1, poly2, BooleanOp.Union, minArea);
         }
 
-        public static List<GeneralPolygon2d> Union(List<GeneralPolygon2d> poly1, List<GeneralPolygon2d> poly2, double minArea = -1)
+        public static List<GeneralPolygon2d> Union(IReadOnlyCollection<GeneralPolygon2d> poly1, IReadOnlyCollection<GeneralPolygon2d> poly2, double minArea = -1)
         {
             return PolygonBoolean(poly1, poly2, BooleanOp.Union, minArea);
         }
@@ -507,17 +507,17 @@ namespace gs
             return PolygonBoolean(poly1, poly2, BooleanOp.Intersection, minArea);
         }
 
-        public static List<GeneralPolygon2d> Intersection(GeneralPolygon2d poly1, List<GeneralPolygon2d> poly2, double minArea = -1)
+        public static List<GeneralPolygon2d> Intersection(GeneralPolygon2d poly1, IReadOnlyCollection<GeneralPolygon2d> poly2, double minArea = -1)
         {
             return PolygonBoolean(poly1, poly2, BooleanOp.Intersection, minArea);
         }
 
-        public static List<GeneralPolygon2d> Intersection(List<GeneralPolygon2d> poly1, GeneralPolygon2d poly2, double minArea = -1)
+        public static List<GeneralPolygon2d> Intersection(IReadOnlyCollection<GeneralPolygon2d> poly1, GeneralPolygon2d poly2, double minArea = -1)
         {
             return PolygonBoolean(poly1, poly2, BooleanOp.Intersection, minArea);
         }
 
-        public static List<GeneralPolygon2d> Intersection(List<GeneralPolygon2d> poly1, List<GeneralPolygon2d> poly2, double minArea = -1)
+        public static List<GeneralPolygon2d> Intersection(IReadOnlyCollection<GeneralPolygon2d> poly1, IReadOnlyCollection<GeneralPolygon2d> poly2, double minArea = -1)
         {
             return PolygonBoolean(poly1, poly2, BooleanOp.Intersection, minArea);
         }
@@ -527,17 +527,17 @@ namespace gs
             return PolygonBoolean(poly1, poly2, BooleanOp.Difference, minArea);
         }
 
-        public static List<GeneralPolygon2d> Difference(GeneralPolygon2d poly1, List<GeneralPolygon2d> poly2, double minArea = -1)
+        public static List<GeneralPolygon2d> Difference(GeneralPolygon2d poly1, IReadOnlyCollection<GeneralPolygon2d> poly2, double minArea = -1)
         {
             return PolygonBoolean(poly1, poly2, BooleanOp.Difference, minArea);
         }
 
-        public static List<GeneralPolygon2d> Difference(List<GeneralPolygon2d> poly1, GeneralPolygon2d poly2, double minArea = -1)
+        public static List<GeneralPolygon2d> Difference(IReadOnlyCollection<GeneralPolygon2d> poly1, GeneralPolygon2d poly2, double minArea = -1)
         {
             return PolygonBoolean(poly1, poly2, BooleanOp.Difference, minArea);
         }
 
-        public static List<GeneralPolygon2d> Difference(List<GeneralPolygon2d> poly1, List<GeneralPolygon2d> poly2, double minArea = -1)
+        public static List<GeneralPolygon2d> Difference(IReadOnlyCollection<GeneralPolygon2d> poly1, IReadOnlyCollection<GeneralPolygon2d> poly2, double minArea = -1)
         {
             return PolygonBoolean(poly1, poly2, BooleanOp.Difference, minArea);
         }
@@ -545,7 +545,7 @@ namespace gs
         /// <summary>
         /// Extract set of nested solids (ie polygon-with-holes) from treeNode
         /// </summary>
-        public static void Convert(PolyNode treeNode, List<GeneralPolygon2d> polys, double nIntScale, double minArea)
+        public static void Convert(PolyNode treeNode, IList<GeneralPolygon2d> polys, double nIntScale, double minArea)
         {
             if (treeNode.IsHole)
                 throw new Exception("ClipperUtil.Convert: should not have a hole here");
@@ -585,7 +585,7 @@ namespace gs
         /// <summary>
         /// remove portions of polyline that are inside set of solids
         /// </summary>
-        public static List<PolyLine2d> ClipAgainstPolygon(List<GeneralPolygon2d> solids, PolyLine2d polyline, bool bIntersect = false)
+        public static List<PolyLine2d> ClipAgainstPolygon(IReadOnlyCollection<GeneralPolygon2d> solids, PolyLine2d polyline, bool bIntersect = false)
         {
             double nIntScale = Math.Max(GetIntScale(solids), GetIntScale(polyline.Vertices));
             List<PolyLine2d> result = new List<PolyLine2d>();
