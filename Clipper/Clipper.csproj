@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <PackageId>Sutro.Clipper</PackageId>
-    <Version>1.1.3</Version>
+    <Version>1.1.4</Version>
     <PackageDescription>Polyline/polygon clipping library; intersection, union, difference, exclusive-or,
 and polyline/polygon offsetting.</PackageDescription>
     <RepositoryUrl>https://github.com/SutroMachine/Sutro.Clipper</RepositoryUrl>
@@ -30,7 +30,7 @@ and polyline/polygon offsetting.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Sutro.geometry3Sharp" Version="1.0.14" />
+    <PackageReference Include="Sutro.geometry3Sharp" Version="1.0.19" />
   </ItemGroup>
 
   <ItemGroup>
