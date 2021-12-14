@@ -2,6 +2,7 @@
 using g3;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace gs
 {
@@ -354,30 +355,34 @@ namespace gs
             Union, Difference, Intersection, Xor
         }
 
-        public static List<GeneralPolygon2d> PolygonBoolean(GeneralPolygon2d poly1, GeneralPolygon2d poly2, BooleanOp opType, double minArea = -1)
+        public static List<GeneralPolygon2d> PolygonBoolean(GeneralPolygon2d poly1, GeneralPolygon2d poly2, BooleanOp opType,
+            double minArea = -1, CancellationToken? cancellationToken = null)
         {
             return PolygonBoolean(new List<GeneralPolygon2d>() { poly1 },
-                                  new List<GeneralPolygon2d>() { poly2 }, opType, minArea);
+                                  new List<GeneralPolygon2d>() { poly2 }, opType, minArea, cancellationToken);
         }
 
-        public static List<GeneralPolygon2d> PolygonBoolean(GeneralPolygon2d poly1, IReadOnlyCollection<GeneralPolygon2d> poly2, BooleanOp opType, double minArea = -1)
+        public static List<GeneralPolygon2d> PolygonBoolean(GeneralPolygon2d poly1, IReadOnlyCollection<GeneralPolygon2d> poly2,
+            BooleanOp opType, double minArea = -1, CancellationToken? cancellationToken = null)
         {
-            return PolygonBoolean(new List<GeneralPolygon2d>() { poly1 }, poly2, opType, minArea);
+            return PolygonBoolean(new List<GeneralPolygon2d>() { poly1 }, poly2, opType, minArea, cancellationToken);
         }
 
-        public static List<GeneralPolygon2d> PolygonBoolean(IReadOnlyCollection<GeneralPolygon2d> poly1, GeneralPolygon2d poly2, BooleanOp opType, double minArea = -1)
+        public static List<GeneralPolygon2d> PolygonBoolean(IReadOnlyCollection<GeneralPolygon2d> poly1, GeneralPolygon2d poly2,
+            BooleanOp opType, double minArea = -1, CancellationToken? cancellationToken = null)
         {
-            return PolygonBoolean(poly1, new List<GeneralPolygon2d>() { poly2 }, opType, minArea);
+            return PolygonBoolean(poly1, new List<GeneralPolygon2d>() { poly2 }, opType, minArea, cancellationToken);
         }
 
-        public static List<GeneralPolygon2d> MergePolygons(IReadOnlyCollection<GeneralPolygon2d> polys, double minArea = -1)
+        public static List<GeneralPolygon2d> MergePolygons(IReadOnlyCollection<GeneralPolygon2d> polys,
+            double minArea = -1, CancellationToken? cancellationToken = null)
         {
-            return PolygonUnion(polys, minArea);
+            return PolygonUnion(polys, minArea, cancellationToken);
         }
 
         public static List<GeneralPolygon2d> PolygonBoolean(
             IReadOnlyCollection<GeneralPolygon2d> poly1, IReadOnlyCollection<GeneralPolygon2d> poly2,
-            BooleanOp opType, double minArea = -1)
+            BooleanOp opType, double minArea = -1, CancellationToken? cancellationToken = null)
         {
             // handle cases where one list is empty
             if (poly1.Count == 0)
@@ -401,15 +406,17 @@ namespace gs
 
             try
             {
-                Clipper clipper = new Clipper(Clipper.ioStrictlySimple);
+                Clipper clipper = new Clipper(Clipper.ioStrictlySimple, cancellationToken);
 
                 foreach (GeneralPolygon2d sub in poly1)
                 {
+                    cancellationToken?.ThrowIfCancellationRequested();
                     CPolygonList cpoly = ConvertToClipper(sub, nIntScale);
                     clipper.AddPaths(cpoly, PolyType.ptSubject, true);
                 }
                 foreach (GeneralPolygon2d clip in poly2)
                 {
+                    cancellationToken?.ThrowIfCancellationRequested();
                     CPolygonList cpoly = ConvertToClipper(clip, nIntScale);
                     clipper.AddPaths(cpoly, PolyType.ptClip, true);
                 }
@@ -432,7 +439,10 @@ namespace gs
 
                 List<GeneralPolygon2d> result = new List<GeneralPolygon2d>();
                 for (int ci = 0; ci < tree.ChildCount; ++ci)
+                {
+                    cancellationToken?.ThrowIfCancellationRequested();
                     Convert(tree.Childs[ci], result, nIntScale, minArea);
+                }
                 return result;
             }
             catch /*(Exception e)*/
@@ -443,7 +453,7 @@ namespace gs
         }
 
         public static List<GeneralPolygon2d> PolygonUnion(
-            IReadOnlyCollection<GeneralPolygon2d> polys, double minArea = -1)
+            IReadOnlyCollection<GeneralPolygon2d> polys, double minArea = -1, CancellationToken? cancellationToken = null)
         {
             // handle cases where one list is empty
             if (polys.Count == 0)
@@ -460,11 +470,12 @@ namespace gs
                 CPolygonList cpolyCombined = new CPolygonList();
                 foreach (GeneralPolygon2d sub in polys)
                 {
+                    cancellationToken?.ThrowIfCancellationRequested();
                     CPolygonList cpoly = ConvertToClipper(sub, nIntScale);
                     cpolyCombined.AddRange(cpoly);
                 }
 
-                CPolygonList cpoly_result = Clipper.SimplifyPolygons(cpolyCombined, PolyFillType.pftPositive);
+                CPolygonList cpoly_result = Clipper.SimplifyPolygons(cpolyCombined, PolyFillType.pftPositive, cancellationToken);
 
                 var result = ConvertFromClipper(cpoly_result, nIntScale);
                 return result;
@@ -476,64 +487,76 @@ namespace gs
             }
         }
 
-        public static List<GeneralPolygon2d> Union(GeneralPolygon2d poly1, GeneralPolygon2d poly2, double minArea = -1)
+        public static List<GeneralPolygon2d> Union(GeneralPolygon2d poly1, GeneralPolygon2d poly2,
+            double minArea = -1, CancellationToken? cancellationToken = null)
         {
-            return PolygonBoolean(poly1, poly2, BooleanOp.Union, minArea);
+            return PolygonBoolean(poly1, poly2, BooleanOp.Union, minArea, cancellationToken);
         }
 
-        public static List<GeneralPolygon2d> Union(GeneralPolygon2d poly1, List<GeneralPolygon2d> poly2, double minArea = -1)
+        public static List<GeneralPolygon2d> Union(GeneralPolygon2d poly1, List<GeneralPolygon2d> poly2,
+            double minArea = -1, CancellationToken? cancellationToken = null)
         {
-            return PolygonBoolean(poly1, poly2, BooleanOp.Union, minArea);
+            return PolygonBoolean(poly1, poly2, BooleanOp.Union, minArea, cancellationToken);
         }
 
-        public static List<GeneralPolygon2d> Union(IReadOnlyCollection<GeneralPolygon2d> poly1, GeneralPolygon2d poly2, double minArea = -1)
+        public static List<GeneralPolygon2d> Union(IReadOnlyCollection<GeneralPolygon2d> poly1, GeneralPolygon2d poly2,
+            double minArea = -1, CancellationToken? cancellationToken = null)
         {
-            return PolygonBoolean(poly1, poly2, BooleanOp.Union, minArea);
+            return PolygonBoolean(poly1, poly2, BooleanOp.Union, minArea, cancellationToken);
         }
 
-        public static List<GeneralPolygon2d> Union(IReadOnlyCollection<GeneralPolygon2d> poly1, IReadOnlyCollection<GeneralPolygon2d> poly2, double minArea = -1)
+        public static List<GeneralPolygon2d> Union(IReadOnlyCollection<GeneralPolygon2d> poly1, IReadOnlyCollection<GeneralPolygon2d> poly2,
+            double minArea = -1, CancellationToken? cancellationToken = null)
         {
-            return PolygonBoolean(poly1, poly2, BooleanOp.Union, minArea);
+            return PolygonBoolean(poly1, poly2, BooleanOp.Union, minArea, cancellationToken);
         }
 
-        public static List<GeneralPolygon2d> Intersection(GeneralPolygon2d poly1, GeneralPolygon2d poly2, double minArea = -1)
+        public static List<GeneralPolygon2d> Intersection(GeneralPolygon2d poly1, GeneralPolygon2d poly2,
+            double minArea = -1, CancellationToken? cancellationToken = null)
         {
-            return PolygonBoolean(poly1, poly2, BooleanOp.Intersection, minArea);
+            return PolygonBoolean(poly1, poly2, BooleanOp.Intersection, minArea, cancellationToken);
         }
 
-        public static List<GeneralPolygon2d> Intersection(GeneralPolygon2d poly1, IReadOnlyCollection<GeneralPolygon2d> poly2, double minArea = -1)
+        public static List<GeneralPolygon2d> Intersection(GeneralPolygon2d poly1, IReadOnlyCollection<GeneralPolygon2d> poly2,
+            double minArea = -1, CancellationToken? cancellationToken = null)
         {
-            return PolygonBoolean(poly1, poly2, BooleanOp.Intersection, minArea);
+            return PolygonBoolean(poly1, poly2, BooleanOp.Intersection, minArea, cancellationToken);
         }
 
-        public static List<GeneralPolygon2d> Intersection(IReadOnlyCollection<GeneralPolygon2d> poly1, GeneralPolygon2d poly2, double minArea = -1)
+        public static List<GeneralPolygon2d> Intersection(IReadOnlyCollection<GeneralPolygon2d> poly1, GeneralPolygon2d poly2,
+            double minArea = -1, CancellationToken? cancellationToken = null)
         {
-            return PolygonBoolean(poly1, poly2, BooleanOp.Intersection, minArea);
+            return PolygonBoolean(poly1, poly2, BooleanOp.Intersection, minArea, cancellationToken);
         }
 
-        public static List<GeneralPolygon2d> Intersection(IReadOnlyCollection<GeneralPolygon2d> poly1, IReadOnlyCollection<GeneralPolygon2d> poly2, double minArea = -1)
+        public static List<GeneralPolygon2d> Intersection(IReadOnlyCollection<GeneralPolygon2d> poly1, IReadOnlyCollection<GeneralPolygon2d> poly2,
+            double minArea = -1, CancellationToken? cancellationToken = null)
         {
-            return PolygonBoolean(poly1, poly2, BooleanOp.Intersection, minArea);
+            return PolygonBoolean(poly1, poly2, BooleanOp.Intersection, minArea, cancellationToken);
         }
 
-        public static List<GeneralPolygon2d> Difference(GeneralPolygon2d poly1, GeneralPolygon2d poly2, double minArea = -1)
+        public static List<GeneralPolygon2d> Difference(GeneralPolygon2d poly1, GeneralPolygon2d poly2,
+            double minArea = -1, CancellationToken? cancellationToken = null)
         {
-            return PolygonBoolean(poly1, poly2, BooleanOp.Difference, minArea);
+            return PolygonBoolean(poly1, poly2, BooleanOp.Difference, minArea, cancellationToken);
         }
 
-        public static List<GeneralPolygon2d> Difference(GeneralPolygon2d poly1, IReadOnlyCollection<GeneralPolygon2d> poly2, double minArea = -1)
+        public static List<GeneralPolygon2d> Difference(GeneralPolygon2d poly1, IReadOnlyCollection<GeneralPolygon2d> poly2,
+            double minArea = -1, CancellationToken? cancellationToken = null)
         {
-            return PolygonBoolean(poly1, poly2, BooleanOp.Difference, minArea);
+            return PolygonBoolean(poly1, poly2, BooleanOp.Difference, minArea, cancellationToken);
         }
 
-        public static List<GeneralPolygon2d> Difference(IReadOnlyCollection<GeneralPolygon2d> poly1, GeneralPolygon2d poly2, double minArea = -1)
+        public static List<GeneralPolygon2d> Difference(IReadOnlyCollection<GeneralPolygon2d> poly1, GeneralPolygon2d poly2,
+            double minArea = -1, CancellationToken? cancellationToken = null)
         {
-            return PolygonBoolean(poly1, poly2, BooleanOp.Difference, minArea);
+            return PolygonBoolean(poly1, poly2, BooleanOp.Difference, minArea, cancellationToken);
         }
 
-        public static List<GeneralPolygon2d> Difference(IReadOnlyCollection<GeneralPolygon2d> poly1, IReadOnlyCollection<GeneralPolygon2d> poly2, double minArea = -1)
+        public static List<GeneralPolygon2d> Difference(IReadOnlyCollection<GeneralPolygon2d> poly1, IReadOnlyCollection<GeneralPolygon2d> poly2,
+            double minArea = -1, CancellationToken? cancellationToken = null)
         {
-            return PolygonBoolean(poly1, poly2, BooleanOp.Difference, minArea);
+            return PolygonBoolean(poly1, poly2, BooleanOp.Difference, minArea, cancellationToken);
         }
 
         /// <summary>

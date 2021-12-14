@@ -50,6 +50,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 //using System.Text;          //for Int128.AsString() & StringBuilder
 //using System.IO;            //debugging with streamReader & StreamWriter
@@ -1411,6 +1412,8 @@ namespace ClipperLib
         public const int ioStrictlySimple = 2;
         public const int ioPreserveCollinear = 4;
 
+        private CancellationToken m_CancellationToken;
+
         private ClipType m_ClipType;
         private Maxima m_Maxima;
         private TEdge m_SortedEdges;
@@ -1428,8 +1431,9 @@ namespace ClipperLib
       public ZFillCallback ZFillFunction { get; set; }
 #endif
 
-        public Clipper(int InitOptions = 0) : base() //constructor
+        public Clipper(int InitOptions = 0, CancellationToken? cancellationToken = null) : base() //constructor
         {
+            m_CancellationToken = cancellationToken ?? CancellationToken.None;
             m_Scanbeam = null;
             m_Maxima = null;
             m_ActiveEdges = null;
@@ -1554,12 +1558,16 @@ namespace ClipperLib
             m_ClipFillType = clipFillType;
             m_ClipType = clipType;
             m_UsingPolyTree = true;
-            bool succeeded;
+            bool succeeded = false;
             try
             {
                 succeeded = ExecuteInternal();
                 //build the return polygons ...
                 if (succeeded) BuildResult2(polytree);
+            }
+            catch (OperationCanceledException)
+            {
+                //
             }
             finally
             {
@@ -1600,6 +1608,7 @@ namespace ClipperLib
                 InsertLocalMinimaIntoAEL(botY);
                 while (PopScanbeam(out topY) || LocalMinimaPending())
                 {
+                    m_CancellationToken.ThrowIfCancellationRequested();
                     ProcessHorizontals();
                     m_GhostJoins.Clear();
                     if (!ProcessIntersections(topY)) return false;
@@ -1613,6 +1622,7 @@ namespace ClipperLib
                 //fix orientations ...
                 foreach (OutRec outRec in m_PolyOuts)
                 {
+                    m_CancellationToken.ThrowIfCancellationRequested();
                     if (outRec.Pts == null || outRec.IsOpen) continue;
                     if ((outRec.IsHole ^ ReverseSolution) == (Area(outRec) > 0))
                         ReversePolyPtLinks(outRec.Pts);
@@ -1622,6 +1632,7 @@ namespace ClipperLib
 
                 foreach (OutRec outRec in m_PolyOuts)
                 {
+                    m_CancellationToken.ThrowIfCancellationRequested();
                     if (outRec.Pts == null)
                         continue;
                     else if (outRec.IsOpen)
@@ -4302,10 +4313,10 @@ namespace ClipperLib
         //------------------------------------------------------------------------------
 
         public static Paths SimplifyPolygons(Paths polys,
-            PolyFillType fillType = PolyFillType.pftEvenOdd)
+            PolyFillType fillType = PolyFillType.pftEvenOdd, CancellationToken? cancellationToken = null)
         {
             Paths result = new Paths();
-            Clipper c = new Clipper();
+            Clipper c = new Clipper(cancellationToken: cancellationToken ?? CancellationToken.None);
             c.StrictlySimple = true;
             c.AddPaths(polys, PolyType.ptSubject, true);
             c.Execute(ClipType.ctUnion, result, fillType, fillType);
