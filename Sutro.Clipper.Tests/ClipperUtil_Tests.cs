@@ -72,7 +72,7 @@ namespace Sutro.Clipper.Tests
             // Assert cancelled result is an empty list
             Console.WriteLine($"Operation cancelled after {cancellationTime / 1000d:0.00} seconds.");
             Assert.AreEqual(0, cancelledResult.Count);
-            Assert.IsTrue(cancellationTime < 200);
+            Assert.IsTrue(cancellationTime < executionTime / 2d, "Cancelled run should be less than 1/2 the ellapsed time of the completed run");
         }
     }
 }
