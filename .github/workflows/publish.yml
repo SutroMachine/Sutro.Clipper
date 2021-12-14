@@ -1,13 +1,9 @@
-name: Build
+name: Publish
 
 on:
   push:
     branches:
-      - "*"
-      - "develop"
-      - "hotfix/*"
-      - "feature/*"
-      - "!master"
+      - "master"
 
 jobs:
   build:
@@ -57,3 +53,22 @@ jobs:
           .\.sonar\scanner\dotnet-sonarscanner begin /k:"SutroMachine_Sutro.Clipper" /o:"sutromachine" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:"sonar.cs.opencover.reportsPaths=**/coverage.opencover.xml"
           dotnet build -c Release
           .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+
+      - name: Publish on version change
+        id: publish_nuget
+        uses: AraHaan/publish-nuget@patch-2
+        with:
+          # Relative to repository root
+          PROJECT_FILE_PATH: Clipper/Clipper.csproj
+
+          # Regex pattern to extract version info in a capturing group
+          VERSION_REGEX: <Version>(.*)<\/Version>
+
+          # Flag to enable / disable git tagging
+          TAG_COMMIT: true
+
+          # Format of the git tag, [*] gets replaced with version
+          TAG_FORMAT: v*
+
+          # nuget.org API key
+          NUGET_KEY: ${{secrets.NUGET_API_KEY}}          
