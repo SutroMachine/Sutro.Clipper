@@ -16,19 +16,13 @@ namespace gs
         /// Polygons with area smaller than this value are discarded internally in offset and boolean functions.
         /// This is a default, if a function takes a minArea parameter, it overrides this value.
         /// </summary>
-        public static double DiscardMinArea = MathUtil.ZeroTolerancef;
+        public static double DiscardMinArea { get; set; } = MathUtil.ZeroTolerancef;
 
         /// <summary>
         /// If enabled, we scale polygons to maximum possible integer size, instead
         /// of using fixed precision. Default false.
         /// </summary>
-        public static bool ComputeToMaxAccuracy
-        {
-            get { return max_accuracy; }
-            set { max_accuracy = value; }
-        }
-
-        private static bool max_accuracy = false;
+        public static bool ComputeToMaxAccuracy { get; set; } = false;
 
         /// <summary>
         /// Precision of integer solution, relative to input units.
@@ -56,7 +50,7 @@ namespace gs
             Vector2d maxDist = CurveUtils2.GetMaxOriginDistances(vertices);
             double max_origin_dist = Math.Max(maxDist.x, maxDist.y);
 
-            if (max_accuracy == false)
+            if (ComputeToMaxAccuracy == false)
             {
                 // if max int coord is within our max-int range, we are safe
                 int max_dist_int = (int)(max_origin_dist * inv_default_precision);
