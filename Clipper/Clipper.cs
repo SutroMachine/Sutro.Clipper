@@ -4098,6 +4098,8 @@ namespace ClipperLib
         {
             for (int i = 0; i < m_Joins.Count; i++)
             {
+                m_CancellationToken.ThrowIfCancellationRequested();
+
                 Join join = m_Joins[i];
 
                 OutRec outRec1 = GetOutRec(join.OutPt1.Idx);
